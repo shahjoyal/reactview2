@@ -1,0 +1,21 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
+    <title>Blend Dashboard (React)</title>
+  </head>
+  <body>
+    <div id="root"></div>
+
+    <!-- Vite: load React app entry -->
+    <script type="module" src="/src/main.jsx"></script>
+
+    <!-- Load original dashboard renderer (must be in /public/dashboard.js) -->
+    <!-- Keep this AFTER the app entry so the React DOM exists before dashboard.js attempts to touch it -->
+    <script src="/dashboard.js" defer></script>
+
+    <!-- Small inline debug to confirm index.html executed -->
+    <script>console.log('[index.html] loaded:', location.pathname);</script>
+  </body>
+</html>

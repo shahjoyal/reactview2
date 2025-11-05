@@ -1,0 +1,298 @@
+/* index.css — cleaned & consolidated */
+
+:root{
+  --bg: #F7F8FA;
+  --card: #fff;
+  --muted: #6b7280;
+  --accent: #02008a;
+
+  /* layout tunables */
+  --sidebar-width: 160px;
+  --sidebar-collapsed-width: 52px;
+  --topbar-height: 52px;        /* lowered for more vertical room */
+  --app-gap: 6px;
+  --content-padding: 8px;
+
+  /* bunker sizing */
+  --bunker-min-height: 90px;    /* reduced min */
+  --bunker-max-height: 300px;   /* reduced max */
+  --bunker-top-line-distance: 36px;
+  --arrow-width: 3px;
+  --bunker-arrow-height: 60px;
+  --arrow-head-size: 10px;
+}
+
+/* --- Base / page rules --- */
+html, body {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  width: 100%;
+  overflow-x: hidden;    /* no horizontal scroll */
+  overflow-y: hidden;    /* page-level vertical scroll hidden */
+  font-family: Inter, system-ui, Arial, sans-serif;
+  background: var(--bg);
+  color: #111;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+  -webkit-overflow-scrolling: touch;
+  -ms-overflow-style: none;
+}
+
+/* app layout */
+.app {
+  display: flex;
+  height: 100vh;
+  gap: var(--app-gap);
+  box-sizing: border-box;
+  align-items: stretch;
+}
+
+/* sidebar */
+.sidebar {
+  width: var(--sidebar-width);
+  padding: 8px 6px;
+  background: var(--card);
+  border-right: 1px solid rgba(0,0,0,0.04);
+  box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  flex-shrink: 0;
+  min-width: var(--sidebar-collapsed-width);
+  max-height: 100vh;
+  overflow-y: auto;
+  transition: width 180ms ease;
+}
+.sidebar.collapsed { width: var(--sidebar-collapsed-width); }
+.sidebar .title { font-weight: 800; color: var(--accent); padding: 8px 10px; font-size: 13px; }
+.sidebar .item { display:flex; align-items:center; padding:8px 10px; border-radius:8px; cursor:pointer; font-weight:700; color:#111; font-size:13px; gap:8px; }
+
+/* topbar */
+.topbar {
+  height: var(--topbar-height);
+  min-height: var(--topbar-height);
+  display:flex;
+  align-items:center;
+  justify-content:space-between;
+  gap:10px;
+  padding:0 10px;
+  box-sizing:border-box;
+  flex-shrink:0;
+}
+.topbar h1 { margin:0; font-size:15px; color:var(--accent); font-weight:800; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; }
+
+/* layout card */
+.layout-card {
+  background: var(--card);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 24px rgba(2,8,23,0.06);
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  height: calc(100% - var(--topbar-height) - 12px);
+  box-sizing: border-box;
+  overflow: visible; /* allow sticky children to show */
+  transform: translateY(-4px); /* small upward nudge so last row fits */
+}
+
+/* main row */
+.layout-row {
+  display:flex;
+  gap:8px;
+  align-items:flex-start;
+  flex:1 1 auto;
+  min-height:0;
+  flex-wrap:wrap;
+}
+
+/* diagram column and internal scroll */
+.diagram-column {
+  flex:1 1 0;
+  min-width:0;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  min-height:0;
+  overflow: hidden;
+}
+.diagram-scroll {
+  overflow: auto; /* internal scrolling allowed here */
+  padding: 6px;
+  box-sizing: border-box;
+  max-height: calc(100vh - var(--topbar-height) - 36px);
+  scrollbar-gutter: stable;
+  padding-bottom: 20px; /* breathing room so last row not cut off */
+}
+
+/* stats column */
+.stats-column {
+  width: 150px;
+  flex-shrink: 0;
+}
+.stats-panel {
+  background: var(--accent);
+  color: #fff;
+  padding: 6px 8px;
+  border-radius: 8px;
+  box-shadow: 0 8px 20px rgba(2,8,23,0.08);
+  position: sticky;
+  top: calc(var(--topbar-height) + 8px);
+  z-index: 20;
+  font-size: 13px;
+}
+
+/* bunkers grid (compact grid layout) */
+.bunkers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(84px, 1fr));
+  gap: 10px;
+  align-items: end;
+  padding: 8px;
+  box-sizing: border-box;
+  width: 100%;
+}
+
+/* bunker box */
+.bunker {
+  position: relative;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-end;
+  min-width: 88px;
+  height: clamp(var(--bunker-min-height), 20vh, var(--bunker-max-height));
+  box-sizing: border-box;
+  background: transparent;
+  transition: transform .12s ease;
+}
+.bunker svg { width:100%; height:100%; display:block; object-fit:contain; }
+.bunker .label {
+  position: absolute;
+  bottom: -16px;
+  left: 50%;
+  transform: translateX(-50%);
+  background: rgba(255,255,255,0.98);
+  padding: 4px 8px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.06);
+  font-weight: 700;
+  font-size: 11px;
+  white-space: nowrap;
+}
+
+/* coal flow / cards area */
+.coal-cards-wrapper { display:flex; flex-direction:column; gap:8px; width:100%; padding:6px; box-sizing:border-box; }
+
+/* card wrapper */
+.coal-flow-wrap {
+  background: linear-gradient(180deg, #ffffff, #f6fbff);
+  border-radius: 10px;
+  padding: 8px;
+  box-shadow: 0 8px 20px rgba(2,8,35,0.04);
+  border: 1px solid rgba(2,8,35,0.04);
+  box-sizing: border-box;
+  display:flex;
+  flex-direction:column;
+  gap:8px;
+  overflow: hidden;
+  max-height: 138px; /* cap to avoid pushing layout */
+}
+
+/* title */
+.coal-flow-title {
+  display:flex;
+  align-items:center;
+  justify-content:center;
+  gap:8px;
+  padding:6px 8px;
+  background:#fff;
+  color:var(--accent);
+  border-radius:8px;
+  font-weight:800;
+  font-size:14px; /* slightly larger title */
+  box-shadow:0 6px 14px rgba(2,0,138,0.06);
+}
+.coal-flow-title .sub { font-weight:700; font-size:12px; color:#333; opacity:0.85; margin-left:6px; }
+
+/* grid inside card - compact chips */
+.coal-flow-grid {
+  display:grid;
+  grid-template-columns: repeat(auto-fit, minmax(72px, 1fr));
+  gap:8px;
+  align-items:center;
+  padding:6px;
+  box-sizing:border-box;
+  width:100%;
+}
+
+/* chip (coal-box) — bigger font, smaller footprint */
+.coal-box {
+  background: #fff;
+  border-radius: 8px;
+  min-width: 72px;
+  height: auto;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  padding: 6px 8px;
+  box-shadow: 0 6px 18px rgba(2,8,23,0.04);
+  border: 1px solid rgba(2,8,35,0.04);
+  box-sizing: border-box;
+  transition: transform .12s ease, box-shadow .12s ease;
+  font-weight: 800;
+  font-size: 14px; /* increased font for cards */
+}
+
+/* value / timer / gen */
+.coal-box .value {
+  font-size: 15px;           /* larger value font */
+  font-weight: 800;
+  min-width: 56px;
+  text-align: center;
+  padding: 6px 8px;
+  border-radius: 6px;
+}
+.coal-box .value.small { font-size: 13px; padding: 4px 6px; }
+.coal-box .label { font-size: 11px; color: var(--muted); font-weight:700; margin-top:6px; white-space:nowrap; }
+
+/* merged timer+gen specifics */
+.coal-box .timer { margin-bottom:6px; }
+.coal-box .gen { margin-top:4px; }
+
+/* blink animation */
+@keyframes blink-red-white {
+  0% { background-color:#ff4d4d; color:#fff; }
+  50% { background-color:#ffffff; color:#111; }
+  100% { background-color:#ff4d4d; color:#fff; }
+}
+.blink-red { animation: blink-red-white 1s linear infinite; }
+
+/* tooltip safe zone */
+#coalTooltip { z-index: 99999; position: fixed; pointer-events: none; }
+
+/* responsive: narrower screens */
+@media (max-width:1100px) {
+  .layout-row { flex-direction: column; gap:8px; }
+  .stats-column { width: 100%; order: 2; }
+  .sidebar { display:none; }
+  .coal-flow-wrap { max-height: none; } /* let cards expand vertically on mobile */
+  .coal-flow-grid { grid-template-columns: repeat(auto-fit, minmax(120px, 1fr)); }
+  .coal-box { min-width: 100%; font-size: 13px; padding: 8px; }
+  .bunker { height: clamp(80px, 22vh, 260px); min-width: 92px; }
+}
+
+/* very short viewports: squeeze more */
+@media (max-height:720px) {
+  :root { --topbar-height:48px; --bunker-min-height:80px; --bunker-max-height:260px; }
+  .layout-card { padding:6px; }
+  .coal-flow-wrap { max-height:118px; padding:6px; }
+  .bunker { height: clamp(80px, 20vh, 260px); }
+  .bunker .label { bottom:-14px; font-size:10px; padding:3px 6px; }
+  .diagram-scroll { max-height: calc(100vh - var(--topbar-height) - 28px); }
+}
+
+/* final safety to avoid accidental body scroll */
+html, body { overflow-x: hidden; overflow-y: hidden; }
