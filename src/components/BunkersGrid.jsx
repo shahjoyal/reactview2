@@ -1159,7 +1159,7 @@ export default function BunkersGrid({
             return (
               <div key={idx} className="bunker" data-bunker={idx} onClick={() => onOpenSingle(idx)} style={{ position:'relative' }}>
                 <svg viewBox="0 0 100 150" preserveAspectRatio="xMidYMid meet" />
-                <div className="label">Coal Mill {String.fromCharCode(65 + idx)}</div>
+                <div className="label"> Mill {String.fromCharCode(65 + idx)}</div>
               </div>
             );
           })}
@@ -1172,14 +1172,14 @@ export default function BunkersGrid({
             {flows.map((f, idx) => (
               <div key={idx} className="coal-box" id={`coalFlowBox-${idx}`} data-bunker={idx}>
                 <div className="value">{safeFmt(f)}</div>
-                <div className="label">Coal Mill {String.fromCharCode(65 + idx)}</div>
+                <div className="label">Mill {String.fromCharCode(65 + idx)}</div>
               </div>
             ))}
           </div>
         </div>
 
         {/* Estimated Generation (current bottom coal) */}
-        <div className="coal-flow-wrap">
+        <div className="coal-flow-wrap2">
           <div className="coal-flow-title">Estimated Generation as per current coal</div>
           <div className="coal-flow-grid" id="estimatedGenGrid">
             {Array.from({ length: NUM }).map((_, idx) => {
