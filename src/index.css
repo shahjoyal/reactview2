@@ -588,7 +588,7 @@ html, body {
 }
 
 .coal-flow-wrap1 {
-  background: linear-gradient(180deg, #fff, #7ab3e2);
+  background: linear-gradient(180deg, #fff, #12c115);
   border-radius: 16px;
   box-shadow: 0 10px 18px rgba(2,8,23,0.04);
   border: 1px solid #eaeef5;
@@ -926,6 +926,38 @@ html, body {
   box-sizing: border-box !important;
 }
 
+.coal-flow-wrap1 {
+  background: linear-gradient(180deg, #66e99d,#ffffff ) !important;
+  /* #1184f8 #fffff */
+  border-radius: 12px !important;
+  padding: 12px !important;
+  margin: 0 !important;
+  box-shadow: 0 10px 30px rgba(2,8,23,0.04) !important;
+  border: 1px solid rgba(6,24,60,0.04) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
+.coal-flow-wrap2 {
+  background: linear-gradient(180deg, #daf65e,#ffffff ) !important;
+  /* #1184f8 #fffff */
+  border-radius: 12px !important;
+  padding: 12px !important;
+  margin: 0 !important;
+  box-shadow: 0 10px 30px rgba(2,8,23,0.04) !important;
+  border: 1px solid rgba(6,24,60,0.04) !important;
+  display: flex !important;
+  flex-direction: column !important;
+  gap: 10px !important;
+  width: 100% !important;
+  max-width: 100% !important;
+  box-sizing: border-box !important;
+}
+
 /* 2) Single grid template for all rows */
 .coal-flow-grid {
   display: grid !important;
@@ -1138,3 +1170,172 @@ html { font-size: clamp(13px, 0.9vw + 0.2rem, 16px); }
 
 /* 6) Never clip horizontally */
 html, body { overflow-x: hidden; }
+/* =========================================================
+   iPad Air portrait tuning (≈768–900px)
+   Paste at the very end of index.css
+========================================================= */
+@media (min-width:768px) and (max-width:900px){
+
+  /* Scale global tokens a touch more for this width */
+  :root{
+    --sidebar-width: 132px;
+    --sidebar-collapsed-width: 52px;
+    --topbar-height: 40px;
+
+    --app-gap: 10px;
+    --content-padding: 10px;
+
+    /* diagram/bunker sizes */
+    --bunker-min-height: 135px;
+    --bunker-max-height: 175px;
+    --bunker-top-line-distance: 22px;
+    --bunker-arrow-height: 52px;
+    --arrow-head-size: 10px;
+  }
+
+  /* Keep sidebar present but slim */
+  .sidebar{
+    width: var(--sidebar-collapsed-width) !important;
+  }
+  .sidebar .s-label{ display:none !important; }
+
+  /* Top bar spacing & button sizing */
+  .topbar{ height: var(--topbar-height); }
+  .topbar .title{ font-size: 15px; }
+  .topbar .actions > *{
+    padding: 6px 10px;
+    font-size: 13px;
+    line-height: 1.1;
+  }
+
+  /* Diagram: make sure the SVG scales and never overflows */
+  .diagram-inner{
+    padding: 8px;
+    overflow: hidden;          /* prevent tiny scrollbars */
+  }
+  .diagram-inner svg,
+  .diagram-inner canvas,
+  .diagram-inner img{
+    display: block;
+    max-width: 100%;
+    height: auto;
+  }
+
+  /* The three big sections: reduce inner padding so more fits on screen */
+  .section-card,
+  .coal-flow-wrap,
+  .coal-flow-wrap1{
+    padding: 10px !important;
+  }
+
+  /* Coal Flow & other mill grids:
+     4-up layout on tablet keeps labels legible and avoids cramped layout */
+  .coal-flow-grid{
+    display: grid !important;
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px !important;
+  }
+
+  /* The small mill cards: keep a sensible min height and tighter text */
+  .coal-box1,
+  .coal-box{
+    min-height: 58px;
+  }
+  .coal-box1 .value,
+  .coal-box .value{ font-size: 16px; }
+  .coal-box1 .label,
+  .coal-box .label{ font-size: 12px; }
+
+  /* Bunkers grid: 4 across feels right at ~820px */
+  .bunkers-grid{
+    grid-template-columns: repeat(4, minmax(0, 1fr)) !important;
+    gap: 10px;
+  }
+
+  /* Stats column: keep it below the diagram on tablet */
+  .layout-row{ flex-direction: column; gap: 12px; }
+  .diagram-column, .stats-column{ width: 100%; }
+  .stats-column{ order: 2; }
+  .diagram-column{ order: 1; }
+
+  /* Never clip horizontally at this breakpoint */
+  html, body{ overflow-x: hidden; }
+}
+
+/* Optional: if iPad landscape feels a bit tight, nudge to 5 columns */
+@media (min-width:901px) and (max-width:1024px){
+  .coal-flow-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+  .bunkers-grid{ grid-template-columns: repeat(5, minmax(0, 1fr)) !important; }
+}
+/* =========================================================
+   Smooth downscale AFTER 1393px (bunkers + arrows + gaps)
+   - Keeps everything exactly the same up to 1393px wide
+   - For wider screens, sizes shrink smoothly as width grows
+   - Won't shrink below ~72% so labels stay readable
+========================================================= */
+@media (min-width: 1394px) {
+  :root{
+    /* scale = 1 at 1393px; decreases as width grows; floor ≈ 0.72 */
+    --desk-scale: clamp(0.72, calc(1393px / 100vw), 1);
+
+    /* bunker sizing driven by the scale */
+    --bunker-min-height: calc(160px * var(--desk-scale));
+    --bunker-max-height: calc(200px * var(--desk-scale));
+    --bunker-top-line-distance: calc(26px * var(--desk-scale));
+    --bunker-arrow-height: calc(70px * var(--desk-scale));
+
+    /* arrow cosmetics follow the same scale */
+    --arrow-width: calc(3px * var(--desk-scale));
+    --arrow-head-size: calc(12px * var(--desk-scale));
+
+    /* optional: compact overall spacing a touch on ultra-wide */
+    --app-gap: calc(12px * var(--desk-scale));
+    --content-padding: calc(12px * var(--desk-scale));
+  }
+
+  /* Bunker cards: allow them to get a bit narrower on huge screens */
+  .bunker{
+    min-width: calc(120px * var(--desk-scale));
+    height: clamp(var(--bunker-min-height), 34vh, var(--bunker-max-height));
+  }
+
+  /* Grid gaps and padding shrink with the same factor */
+  .bunkers-grid{
+    gap: calc(18px * var(--desk-scale));
+    padding: calc(18px * var(--desk-scale));
+  }
+
+  /* Top horizontal line inside the diagram scales cleanly */
+  .top-line{
+    top: var(--bunker-top-line-distance);
+    height: calc(3px * var(--desk-scale));
+  }
+
+  /* Arrow shaft width scales via --arrow-width, tip via --arrow-head-size */
+  .arrow{
+    width: var(--arrow-width);
+    top: calc(var(--bunker-top-line-distance) + 4px);
+    height: var(--bunker-arrow-height);
+  }
+  .arrow::after{
+    /* keep the triangle perfectly centered while its size changes */
+    left: calc(50% - (var(--arrow-head-size) / 2));
+    border-left: calc(var(--arrow-head-size) / 2) solid transparent;
+    border-right: calc(var(--arrow-head-size) / 2) solid transparent;
+    border-top: var(--arrow-head-size) solid #000;
+  }
+
+  /* Coal rows also get proportional padding/gap (optional but nice) */
+  .coal-flow-wrap,
+  .coal-flow-wrap1{
+    padding: calc(var(--content-padding) * 0.9) !important;
+    gap: calc(var(--app-gap) * 0.9) !important;
+  }
+
+  /* Make sure SVGs don’t try to grow beyond their box while we’re downsizing */
+  .bunker svg,
+  .single-bunker svg{
+    max-width: 100%;
+    height: auto;
+  }
+}
