@@ -5,8 +5,10 @@ import React, { useEffect, useRef } from "react";
  * StatsPanel - computes derived metrics (Avg GCV, Avg AFT, Heat Rate, Total Flow)
  * Now prefers reading from window.SNAPSHOT_NORMALIZED (snapshot) when available.
  *
- * Change: compute Avg AFT (flow-weighted) and Cost/MT (flow-weighted) from snapshot data (DB),
- *        do NOT use blend.costRate when snapshot layer costs are available.
+ * Change: compute Avg AFT (flow-weighted) and Cost/MT (flow-weighted)
+ *        Primary cost formula: sum(bottomCoalCost_per_ton * bunkerFlow) / totalFlow
+ *        Falls back to per-layer flow-weighted cost if bottom costs unavailable,
+ *        then falls back to blend.costRate.
  */
 
 export default function StatsPanel() {
@@ -121,7 +123,7 @@ export default function StatsPanel() {
     try {
       if (clientBunkers && Array.isArray(clientBunkers) && clientBunkers[bunkerIndex] && Array.isArray(clientBunkers[bunkerIndex].layers)) {
         const layers = clientBunkers[bunkerIndex].layers;
-        for (let li = layers.length; li >=0 ; li--) {
+        for (let li = layers.length - 1; li >= 0; li--) {
           const L = layers[li];
           if (!L) continue;
           let rawPct = (L.percent === undefined || L.percent === null) ? (L.percentages ? L.percentages : 0) : L.percent;
@@ -142,7 +144,7 @@ export default function StatsPanel() {
       // fallback: scan blend.bunkers bottom->top
       if (Array.isArray(blend && blend.bunkers) && blend.bunkers[bunkerIndex] && Array.isArray(blend.bunkers[bunkerIndex].layers)) {
         const layers = blend.bunkers[bunkerIndex].layers;
-        for (let li = layers.length; li >=0 ; li--) {
+        for (let li = layers.length - 1; li >= 0; li--) {
           const L = layers[li];
           if (!L) continue;
           let rawPct = (L.percent === undefined || L.percent === null) ? (L.percentages ? L.percentages : 0) : L.percent;
@@ -243,6 +245,96 @@ export default function StatsPanel() {
     return null;
   }
 
+  // New: get bottom cost per ton for a bunker (preferred: snapshot/clientBunkers -> blend layers -> coalDB)
+  function getBottomCostForBunker(blend, coalDB, bunkerIndex, snapshot, clientBunkers) {
+    try {
+      const possibleFields = ["cost", "price", "costRate", "rate", "cost_per_ton", "costMT", "costPerTon", "pricePerTon"];
+
+      const readCostFromLayer = (L) => {
+        if (!L) return null;
+        // first check layer object fields
+        for (let f of possibleFields) {
+          if (L[f] !== undefined && L[f] !== null) {
+            const c = safeNum(L[f]);
+            if (c !== null) return c;
+          }
+        }
+        // coalDoc inside layer
+        if (L.coalDoc) {
+          for (let f of possibleFields) {
+            if (L.coalDoc[f] !== undefined && L.coalDoc[f] !== null) {
+              const c = safeNum(L.coalDoc[f]);
+              if (c !== null) return c;
+            }
+          }
+        }
+        // reference to coal name/id
+        if (L.coal) {
+          const foundInSnapshot = snapshot && Array.isArray(snapshot.coals) ? snapshot.coals.find(c => {
+            if (!c) return false;
+            if (c.coal && String(c.coal).trim().toLowerCase() === String(L.coal).trim().toLowerCase()) return true;
+            if (c.name && String(c.name).trim().toLowerCase() === String(L.coal).trim().toLowerCase()) return true;
+            if ((c._id || c.id) && String(c._id || c.id) === String(L.coal)) return true;
+            return false;
+          }) : null;
+          if (foundInSnapshot) {
+            for (let f of possibleFields) {
+              if (foundInSnapshot[f] !== undefined && foundInSnapshot[f] !== null) {
+                const c = safeNum(foundInSnapshot[f]);
+                if (c !== null) return c;
+              }
+            }
+          }
+          const foundInDb = findCoalInDbByNameOrId(L.coal, coalDB, snapshot);
+          if (foundInDb) {
+            for (let f of possibleFields) {
+              if (foundInDb[f] !== undefined && foundInDb[f] !== null) {
+                const c = safeNum(foundInDb[f]);
+                if (c !== null) return c;
+              }
+            }
+          }
+        }
+        return null;
+      };
+
+      // 1) clientBunkers (snapshot) bottom-up
+      if (clientBunkers && Array.isArray(clientBunkers) && clientBunkers[bunkerIndex] && Array.isArray(clientBunkers[bunkerIndex].layers)) {
+        const layers = clientBunkers[bunkerIndex].layers;
+        for (let li = layers.length - 1; li >= 0; li--) {
+          const L = layers[li];
+          if (!L) continue;
+          let rawPct = (L.percent === undefined || L.percent === null) ? (L.percentages ? L.percentages : 0) : L.percent;
+          let pctVal = null;
+          if (Array.isArray(rawPct) && rawPct.length) pctVal = safeNum(rawPct[0]);
+          else pctVal = safeNum(rawPct);
+          if (pctVal == null || pctVal > 0) {
+            const c = readCostFromLayer(L);
+            if (c !== null) return c;
+          }
+        }
+      }
+
+      // 2) blend.bunkers bottom-up
+      if (Array.isArray(blend && blend.bunkers) && blend.bunkers[bunkerIndex] && Array.isArray(blend.bunkers[bunkerIndex].layers)) {
+        const layers = blend.bunkers[bunkerIndex].layers;
+        for (let li = layers.length - 1; li >= 0; li--) {
+          const L = layers[li];
+          if (!L) continue;
+          let rawPct = (L.percent === undefined || L.percent === null) ? (L.percentages ? L.percentages : 0) : L.percent;
+          let pctVal = null;
+          if (Array.isArray(rawPct) && rawPct.length) pctVal = safeNum(rawPct[0]);
+          else pctVal = safeNum(rawPct);
+          if (pctVal == null || pctVal > 0) {
+            const c = readCostFromLayer(L);
+            if (c !== null) return c;
+          }
+        }
+      }
+    } catch (e) {}
+    return null;
+  }
+
   function calcAFT(ox) {
     if (!ox) return null;
     const total = ["SiO2","Al2O3","Fe2O3","CaO","MgO","Na2O","K2O","SO3","TiO2"]
@@ -282,12 +374,15 @@ export default function StatsPanel() {
 
       // For cost calculation (flow-weighted)
       let totalTonnageForCost = 0;   // in same unit as flow (TPH basis)
-      let totalCostNumerator = 0;    // currency * ton
+      let totalCostNumerator = 0;    // currency * ton (per-layer flow-weighted)
+      // New primary bottom-cost numerator:
+      let totalBottomCostNumerator = 0; // sum(bottomCost_per_ton * bunkerFlow)
 
       for (let b = 0; b < bunkerCount; b++) {
         const flowVal = getBunkerFlow(blend, b, snapshot);
         const bottomGcv = getBottomGcvForBunker(blend, coalDB, b, snapshot, (snapshot ? (snapshot.clientBunkers || snapshot.bunkers) : null));
         const bottomAft = getBottomAftForBunker(blend, coalDB, b, snapshot, (snapshot ? (snapshot.clientBunkers || snapshot.bunkers) : null));
+        const bottomCost = getBottomCostForBunker(blend, coalDB, b, snapshot, (snapshot ? (snapshot.clientBunkers || snapshot.bunkers) : null));
 
         if (flowVal !== null && bottomGcv !== null) {
           sumNumerator += Number(bottomGcv) * Number(flowVal);
@@ -297,7 +392,12 @@ export default function StatsPanel() {
           sumAftNumerator += Number(bottomAft) * Number(flowVal);
         }
 
-        // --- Flow-weighted cost computation using snapshot (DB) first, then blend layers, then coalDB ---
+        // accumulate bottom cost numerator if bottomCost known
+        if (flowVal !== null && bottomCost !== null) {
+          totalBottomCostNumerator += Number(bottomCost) * Number(flowVal);
+        }
+
+        // --- Flow-weighted per-layer cost computation (legacy/fallback) ---
         // prefer snapshot.clientBunkers if present (structure similar to blend.bunkers)
         const layerSource = (snapshot && Array.isArray(snapshot.clientBunkers) && snapshot.clientBunkers[b] && Array.isArray(snapshot.clientBunkers[b].layers))
           ? snapshot.clientBunkers[b].layers
@@ -386,12 +486,16 @@ export default function StatsPanel() {
       // avgAFT using flow-weighted average (only AFT)
       const avgAFT = (totalFlow && totalFlow > 0 && sumAftNumerator >= 0) ? (sumAftNumerator / totalFlow) : null;
 
-      // compute flow-weighted cost/MT (if we found any cost info)
+      // compute cost/MT according to new rule:
+      // primary: bottom-coal cost per bunker * flow summed / totalFlow
       let costRate = null;
-      if (totalTonnageForCost > 0) {
+      if (totalFlow && totalFlow > 0 && totalBottomCostNumerator > 0) {
+        costRate = totalBottomCostNumerator / totalFlow;
+      } else if (totalTonnageForCost > 0) {
+        // fallback: per-layer flow-weighted cost
         costRate = totalCostNumerator / totalTonnageForCost;
       } else {
-        // fallback to blend.costRate only if no per-layer cost info
+        // last fallback: blend.costRate if present
         costRate = (blend.costRate !== undefined ? safeNum(blend.costRate) : null);
       }
 
@@ -531,23 +635,6 @@ export default function StatsPanel() {
           <div className="stat-label">Average Coal Consumption Cost(₹/MT)</div>
           <div className="stat-value" id="COSTRATE">--</div>
         </div>
-
-        {/* <div id="blockTableWrap" className="block-table-wrap" style={{ marginTop: 10 }}>
-          <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Next Blocks</div>
-          <table className="block-table" id="blockTable" aria-label="Next blocks table" style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #fff", color: "inherit" }}>
-            <thead>
-              <tr>
-                <th style={{ border: "1px solid #fff", padding: 4 }}>Block</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr id="blockRow-0"><td className="block-time" style={{ border: "1px solid #fff", padding: 4 }}>--</td></tr>
-              <tr id="blockRow-1"><td className="block-time" style={{ border: "1px solid #fff", padding: 4 }}>--</td></tr>
-              <tr id="blockRow-2"><td className="block-time" style={{ border: "1px solid #fff", padding: 4 }}>--</td></tr>
-              <tr id="blockRow-3"><td className="block-time" style={{ border: "1px solid #fff", padding: 4 }}>--</td></tr>
-            </tbody>
-          </table>
-        </div> */}
 
         <div style={{ opacity: 0.85, fontSize: 11, marginTop: 6 }} />
       </div>
