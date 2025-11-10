@@ -532,7 +532,7 @@ export default function StatsPanel() {
           <div className="stat-value" id="COSTRATE">--</div>
         </div>
 
-        <div id="blockTableWrap" className="block-table-wrap" style={{ marginTop: 10 }}>
+        {/* <div id="blockTableWrap" className="block-table-wrap" style={{ marginTop: 10 }}>
           <div style={{ fontSize: 13, fontWeight: 800, marginBottom: 6 }}>Next Blocks</div>
           <table className="block-table" id="blockTable" aria-label="Next blocks table" style={{ width: "100%", borderCollapse: "collapse", border: "1px solid #fff", color: "inherit" }}>
             <thead>
@@ -547,7 +547,7 @@ export default function StatsPanel() {
               <tr id="blockRow-3"><td className="block-time" style={{ border: "1px solid #fff", padding: 4 }}>--</td></tr>
             </tbody>
           </table>
-        </div>
+        </div> */}
 
         <div style={{ opacity: 0.85, fontSize: 11, marginTop: 6 }} />
       </div>
