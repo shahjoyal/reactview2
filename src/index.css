@@ -6,7 +6,7 @@
       --topbar-height:44px;
 
       /* bunker sizing (clamp will keep heights responsive) */
-      --bunker-min-height:160px; --bunker-max-height:200px;
+      --bunker-min-height:160px; --bunker-max-height:160px;
       --bunker-top-line-distance: 26px;
       --arrow-width: 3px;
       --bunker-arrow-height: 70px;
@@ -1339,3 +1339,126 @@ html, body { overflow-x: hidden; }
     height: auto;
   }
 }
+/* =========================
+   Responsive bunker + row fixes (paste at END of index.css)
+   ========================= */
+
+/* tunable: minimum bunker card width (adjust if you want larger thumbnails) */
+:root{
+  --bunker-min-width: 86px;   /* small phone */
+  --bunker-mid-width: 110px;  /* tablet */
+  --bunker-large-width: 120px;/* desktop fallback */
+}
+
+/* Make bunker grid fully fluid: let columns auto-fit and shrink */
+.bunkers-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(var(--bunker-min-width), 1fr));
+  gap: 12px;
+  align-items: end;
+  width: 100%;
+  box-sizing: border-box;
+  padding: 12px; /* safe padding */
+}
+
+/* bunker card: allow shrink, smaller min-width and responsive base */
+.bunker {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: flex-end;
+  box-sizing: border-box;
+
+  /* flexible sizing: base width will try to be ~12% on wide screens but can shrink */
+  flex: 1 1 clamp(var(--bunker-min-width), 11%, var(--bunker-large-width));
+  min-width: var(--bunker-min-width);
+  max-width: 1fr;
+  height: clamp(var(--bunker-min-height), 30vh, var(--bunker-max-height));
+}
+
+/* Ensure bunker arrow stays centered and uses the CSS vars already in file */
+.bunker .arrow,
+.bunker > .arrow {
+  left: 50%;
+  transform: translateX(-50%);
+  position: absolute;
+  top: calc(var(--bunker-top-line-distance) + 4px);
+}
+
+/* svg scales to card width and respects aspect ratio */
+.bunker svg,
+.bunker canvas,
+.bunker img {
+  width: 100% !important;
+  height: auto !important;
+  display: block;
+  max-width: 100%;
+  object-fit: contain;
+}
+
+/* Single view svg safety */
+.single-bunker svg,
+#singleSvg {
+  width: 100% !important;
+  height: auto !important;
+  max-height: calc(100vh - var(--topbar-height, 64px) - 140px);
+}
+
+/* Fix coal-flow-wrap1 fixed width (this was causing horizontal overflow) */
+.coal-flow-wrap1 {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+  box-sizing: border-box !important;
+  overflow: visible !important;
+}
+
+/* In general make coal rows fluid */
+.coal-flow-wrap,
+.coal-flow-wrap1,
+.coal-flow-wrap2 {
+  min-width: 0 !important;
+  max-width: 100% !important;
+  width: 100% !important;
+}
+
+/* Coal flow inner grid fluid columns */
+.coal-flow-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(110px, 1fr));
+  gap: 10px;
+  align-items: start;
+  width: 100%;
+  box-sizing: border-box;
+}
+
+/* Media tweaks for tablet and phone so bunkers can shrink further */
+@media (max-width: 1100px) {
+  :root {
+    --bunker-min-width: 96px;
+  }
+  .bunker { min-width: var(--bunker-min-width); flex: 1 1 calc(18%); }
+  .sidebar { width: var(--sidebar-collapsed-width) !important; }
+  .layout-row { flex-direction: column; gap: 10px; }
+}
+
+/* Phone: reduce even more */
+@media (max-width: 600px) {
+  :root{
+    --bunker-min-width: 72px;
+    --bunker-mid-width: 90px;
+  }
+  .bunkers-grid { grid-template-columns: repeat(auto-fit, minmax(var(--bunker-min-width), 1fr)); gap: 8px; padding: 8px; }
+  .bunker { min-width: var(--bunker-min-width); flex: 1 1 100px; height: clamp(120px, 28vh, var(--bunker-max-height)); }
+  .coal-box, .coal-box1 { min-width: 0; width: 100%; }
+}
+
+/* Slightly reduce gap on very narrow screens to avoid forced wrap */
+@media (max-width: 420px) {
+  .bunkers-grid { gap: 6px; }
+  .coal-flow-grid { gap: 6px; }
+}
+
+/* If you still see overflow on some pages, this optional rule hides tiny rounding overflow */
+html, body { overflow-x: hidden; }
