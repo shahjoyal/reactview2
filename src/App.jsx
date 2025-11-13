@@ -1,4 +1,4 @@
-// src/App.jsx
+// src/App.jsx final
 import React, { useEffect, useState } from 'react';
 import Sidebar from './components/Sidebar';
 import Topbar from './components/Topbar';
