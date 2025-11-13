@@ -150,14 +150,14 @@ export default function App() {
                   <div className="top-line" id="topLine"></div>
 
                   {/* Overview arrows (one per bunker column) */}
-                  <div className="arrow" style={{ left: '6.25%' }}></div>
-                  <div className="arrow" style={{ left: '18.75%' }}></div>
-                  <div className="arrow" style={{ left: '31.25%' }}></div>
+                  <div className="arrow" style={{ left: '7.25%' }}></div>
+                  <div className="arrow" style={{ left: '19.55%' }}></div>
+                  <div className="arrow" style={{ left: '31.75%' }}></div>
                   <div className="arrow" style={{ left: '43.75%' }}></div>
                   <div className="arrow" style={{ left: '56.25%' }}></div>
-                  <div className="arrow" style={{ left: '68.75%' }}></div>
-                  <div className="arrow" style={{ left: '81.25%' }}></div>
-                  <div className="arrow" style={{ left: '93.75%' }}></div>
+                  <div className="arrow" style={{ left: '67.75%' }}></div>
+                  <div className="arrow" style={{ left: '80.25%' }}></div>
+                  <div className="arrow" style={{ left: '92.25%' }}></div>
                 </div>
 
                 {/* Overview */}
